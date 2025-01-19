@@ -1,9 +1,8 @@
-# gui.py
-import random
 import tkinter as tk
 from tkinter import ttk
+from scheduler import PriorityScheduler
+from utils import get_blue_gradient
 from tkinter import messagebox
-from scheduler import PriorityScheduler  # Importing the scheduler logic
 
 class SchedulerApp:
     def __init__(self, root):
@@ -79,23 +78,38 @@ class SchedulerApp:
         self.results.config(text=results_text)
 
     def display_gantt_chart(self):
+        # Create a new top-level window for the Gantt chart
         gantt_chart_window = tk.Toplevel(self.root)
         gantt_chart_window.title("Gantt Chart")
         gantt_chart_window.geometry("800x200")
 
-        canvas = tk.Canvas(gantt_chart_window, width=750, height=100, bg="white")
-        canvas.pack()
+        # Create a canvas for drawing the Gantt chart
+        canvas = tk.Canvas(gantt_chart_window, bg="white")
+        canvas.pack(fill=tk.BOTH, expand=True)
 
+        # Clear any previous content on the canvas
+        canvas.delete("all")
+
+        # Adjust the canvas size dynamically based on the number of processes in the Gantt chart
+        total_width = len(self.scheduler.gantt_chart) * 30  # Box width * number of blocks
+        canvas.config(width=total_width, height=100)
+
+        # Draw the Gantt chart
         x_start = 20
         y = 50
         box_width = 30
 
-        for process in self.scheduler.gantt_chart:
-            color = "#%06x" % random.randint(0, 0xFFFFFF) if process != "Idle" else "#CCCCCC"
+        for index, process in enumerate(self.scheduler.gantt_chart):
+            if process == "Idle":
+                color = "#CCCCCC"
+            else:
+                color = get_blue_gradient(self.scheduler.gantt_chart.index(process), len(self.scheduler.gantt_chart))
+
             canvas.create_rectangle(x_start, y - 20, x_start + box_width, y + 20, fill=color, outline="black")
             canvas.create_text(x_start + box_width // 2, y, text=process, font=("Arial", 10), fill="black")
             x_start += box_width
 
+        # Draw the time labels on the X-axis
         x_start = 20
         for t in range(len(self.scheduler.gantt_chart) + 1):
             canvas.create_text(x_start, y + 30, text=str(t), font=("Arial", 10))
